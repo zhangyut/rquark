@@ -58,5 +58,9 @@ mod test {
         let c = MyCmd::new(123456);
         t.add_cmd(c);
         assert_eq!(t.at(0).id, 123456);
+        assert_eq!(t.at(0).id, 123456);
+        let movetest = t.at(0).id;
+        assert_eq!(movetest, 123456);
+        assert_eq!(t.at(0).id, 123456);
     }
 }
