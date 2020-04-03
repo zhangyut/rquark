@@ -1,0 +1,7 @@
+[package]
+name = "rquark"
+version = "0.1.0"
+authors = ["zhangyt <huli115386945@126.com>"]
+edition = "2018"
+
+[dependencies]
