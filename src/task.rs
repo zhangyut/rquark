@@ -1,11 +1,11 @@
-pub struct Task<'a, T> {
+pub struct Task<T> {
     id: u64,
-    user: &'a str,
+    user: String,
     cmds: Vec<T>,
 }
 
-impl<'a, T> Task<'a, T> {
-    fn new(id: u64, user: &'a str) -> Self {
+impl<T> Task<T> {
+    fn new(id: u64, user: String) -> Self {
         return Task {
             id: id,
             user: user,
@@ -27,8 +27,8 @@ impl<'a, T> Task<'a, T> {
 }
 
 pub trait RawResult {
-    fn to_str(&self) -> &str;
-    fn to_json(&self) -> &str;
+    fn to_string(&self) -> &String;
+    fn to_json(&self) -> &String;
 }
 
 pub struct TaskResult<T: RawResult> {
@@ -54,35 +54,37 @@ impl<T: RawResult> TaskResult<T> {
     fn get_result(&self) -> &T {
         &self.result
     }
-    fn result_to_str(&self) -> String {
+    fn result_to_string(&self) -> String {
         let mut s = String::from("");
         s.push_str(&*self.id.to_string());
         s.push_str("|");
         s.push_str(&*self.code.to_string());
         s.push_str("|");
-        s.push_str(self.result.to_str());
+        s.push_str(&*self.result.to_string());
         s
     }
 }
 
-pub struct EmptyResult<'a> {
-    msg: &'a str,
+pub struct EmptyResult {
+    msg: String,
 }
-impl<'a> EmptyResult<'a> {
+impl EmptyResult {
     fn new() -> Self {
-        return EmptyResult { msg: "" };
+        return EmptyResult {
+            msg: String::from(""),
+        };
     }
 }
-impl<'a> RawResult for EmptyResult<'a> {
-    fn to_str(&self) -> &str {
+impl RawResult for EmptyResult {
+    fn to_string(&self) -> &String {
         &self.msg
     }
-    fn to_json(&self) -> &str {
+    fn to_json(&self) -> &String {
         &self.msg
     }
 }
 
-fn succeed<'a>(id: u64) -> TaskResult<EmptyResult<'a>> {
+fn succeed(id: u64) -> TaskResult<EmptyResult> {
     TaskResult::new(id, 200, EmptyResult::new())
 }
 fn succeed_with_result<T: RawResult>(id: u64, result: T) -> TaskResult<T> {
@@ -106,28 +108,28 @@ mod test {
         }
     }
 
-    pub struct MyResult<'a> {
-        err_msg: &'a str,
+    pub struct MyResult {
+        err_msg: String,
     }
 
-    impl<'a> MyResult<'a> {
-        fn new(msg: &'a str) -> Self {
+    impl MyResult {
+        fn new(msg: String) -> Self {
             return MyResult { err_msg: msg };
         }
     }
 
-    impl<'a> RawResult for MyResult<'a> {
-        fn to_str(&self) -> &str {
+    impl RawResult for MyResult {
+        fn to_string(&self) -> &String {
             &self.err_msg
         }
-        fn to_json(&self) -> &str {
+        fn to_json(&self) -> &String {
             &self.err_msg
         }
     }
 
     #[test]
     fn test_task() {
-        let mut t: Task<MyCmd> = Task::new(12345, "hello world");
+        let mut t: Task<MyCmd> = Task::new(12345, String::from("hello world"));
         let c = MyCmd::new(123456);
         t.add_cmd(c);
         assert_eq!(t.at(0).id, 123456);
@@ -140,17 +142,14 @@ mod test {
         let mut ret_str = String::from("");
         ret_str.push_str(&*t.id.to_string());
         ret_str.push_str("|200|");
-        assert_eq!(ret.result_to_str(), ret_str);
+        assert_eq!(ret.result_to_string(), ret_str);
+        assert_eq!(*ret.get_result().to_string(), String::from(""));
 
-        let mut err_msg = "我错了";
-        let myRet = MyResult::new(err_msg);
-        assert_eq!(err_msg, "我错了");
-        let ret = TaskResult::new(12345, 200, myRet);
-        assert_eq!(ret.get_result().to_str(), "我错了");
-        println!("before modify {:p}", err_msg);
-        err_msg = "我又错了";
-        println!("after modify {:p}", err_msg);
+        let mut err_msg = String::from("我错了");
+        assert_eq!(err_msg, String::from("我错了"));
+        println!("before modify {:?}", err_msg);
+        err_msg = String::from("我又错了");
+        println!("after modify {:?}", err_msg);
         assert_eq!(err_msg, "我又错了");
-        assert_eq!(ret.get_result().to_str(), "我错了");
     }
 }
