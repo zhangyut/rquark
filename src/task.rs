@@ -1,3 +1,7 @@
+use serde::{Deserialize, Serialize};
+use serde_json::{Result, Value};
+
+#[derive(Serialize, Deserialize)]
 pub struct Task<T> {
     id: u64,
     user: String,
@@ -31,6 +35,7 @@ pub trait RawResult {
     fn to_json(&self) -> &String;
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct TaskResult<T: RawResult> {
     id: u64,
     code: u8,
@@ -65,6 +70,7 @@ impl<T: RawResult> TaskResult<T> {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct EmptyResult {
     msg: String,
 }
@@ -94,6 +100,7 @@ fn succeed_with_result<T: RawResult>(id: u64, result: T) -> TaskResult<T> {
 #[cfg(test)]
 mod test {
     use super::*;
+    #[derive(Serialize, Deserialize)]
     pub struct MyCmd {
         id: u64,
     }
@@ -108,6 +115,7 @@ mod test {
         }
     }
 
+    #[derive(Serialize, Deserialize)]
     pub struct MyResult {
         err_msg: String,
     }
@@ -137,6 +145,7 @@ mod test {
         let movetest = t.at(0).id;
         assert_eq!(movetest, 123456);
         assert_eq!(t.at(0).id, 123456);
+        println!("json: {:?}", serde_json::to_string(&t));
 
         let ret = succeed(t.id);
         let mut ret_str = String::from("");
@@ -144,6 +153,7 @@ mod test {
         ret_str.push_str("|200|");
         assert_eq!(ret.result_to_string(), ret_str);
         assert_eq!(*ret.get_result().to_string(), String::from(""));
+        println!("json: {:?}", serde_json::to_string(&ret));
 
         let mut err_msg = String::from("我错了");
         assert_eq!(err_msg, String::from("我错了"));
